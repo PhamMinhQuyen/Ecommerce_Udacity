@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 
 @ExtendWith(MockitoExtension.class)
 public class CartControllerTest {
+
     @InjectMocks
     CartController cartController;
 
@@ -36,6 +37,10 @@ public class CartControllerTest {
 
     @Mock
     CartRepository cartRepository;
+
+    /**
+     * Test function add Cart
+     */
 
     @Test
     void addToCartNotFoundUser() {
@@ -89,7 +94,6 @@ public class CartControllerTest {
         Mockito.doReturn(new User()).when(userRepository).findByUsername(Mockito.any());
         Mockito.doReturn(Optional.empty()).when(itemRepository).findById(Mockito.any());
         ResponseEntity<Cart> responseEntity = cartController.removeFromcart(new ModifyCartRequest());
-        //
         assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
     }
 
@@ -130,12 +134,16 @@ public class CartControllerTest {
         return cart;
     }
 
+    /**
+     * Create Item
+     * @return Item
+     */
     private Item createItem() {
         Item item = new Item();
         item.setId(1L);
         item.setName("Item");
         item.setPrice(BigDecimal.ONE);
-        item.setDescription("Item description");
+        item.setDescription("Description");
         return item;
     }
 }

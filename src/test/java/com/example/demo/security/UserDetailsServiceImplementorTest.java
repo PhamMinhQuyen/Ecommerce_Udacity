@@ -24,6 +24,9 @@ public class UserDetailsServiceImplementorTest {
         com.example.demo.TestUtils.injectObjects(userDetailsServiceImplementor, "applicationUserRepository", userRepo);
     }
 
+    /**
+     * Test load user
+     */
     @Test
     public void testLoadUserByUsername() {
         String username = "test";

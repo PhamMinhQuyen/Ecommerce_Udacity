@@ -35,7 +35,7 @@ public class UserControllerTest {
 
     @Test
     public void createUserHappyPath() {
-        when(encoder.encode("testPassword")).thenReturn("thisIsHashed");
+        when(encoder.encode("testPassword")).thenReturn("test");
         CreateUserRequest r = new CreateUserRequest();
         r.setUsername(USER_NAME);
         r.setPassword("testPassword");
@@ -47,12 +47,12 @@ public class UserControllerTest {
         assertNotNull(u);
         assertEquals(0, u.getId());
         assertEquals(USER_NAME, u.getUsername());
-        assertEquals("thisIsHashed", u.getPassword());
+        assertEquals("test", u.getPassword());
     }
 
     @Test
     public void findById() {
-        when(encoder.encode("testPassword")).thenReturn("thisIsHashed");
+        when(encoder.encode("testPassword")).thenReturn("test");
         CreateUserRequest r = new CreateUserRequest();
         r.setUsername(USER_NAME);
         r.setPassword("testPassword");
@@ -67,7 +67,7 @@ public class UserControllerTest {
         assertNotNull(u);
         assertEquals(0, u.getId());
         assertEquals(USER_NAME, u.getUsername());
-        assertEquals("thisIsHashed", u.getPassword());
+        assertEquals("test", u.getPassword());
     }
 
     /**
@@ -75,7 +75,7 @@ public class UserControllerTest {
      */
     @Test
     public void findByUserName() {
-        when(encoder.encode("testPassword")).thenReturn("thisIsHashed");
+        when(encoder.encode("testPassword")).thenReturn("test");
         CreateUserRequest r = new CreateUserRequest();
         r.setUsername(USER_NAME);
         r.setPassword("testPassword");
@@ -90,6 +90,6 @@ public class UserControllerTest {
         assertNotNull(u);
         assertEquals(0, u.getId());
         assertEquals(USER_NAME, u.getUsername());
-        assertEquals("thisIsHashed", u.getPassword());
+        assertEquals("test", u.getPassword());
     }
 }
