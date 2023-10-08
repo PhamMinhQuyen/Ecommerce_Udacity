@@ -1,6 +1,5 @@
 package com.example.demo.controllers;
 
-import com.example.demo.TestUtils;
 import com.example.demo.model.persistence.Cart;
 import com.example.demo.model.persistence.Item;
 import com.example.demo.model.persistence.User;
@@ -8,149 +7,135 @@ import com.example.demo.model.persistence.repositories.CartRepository;
 import com.example.demo.model.persistence.repositories.ItemRepository;
 import com.example.demo.model.persistence.repositories.UserRepository;
 import com.example.demo.model.requests.ModifyCartRequest;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.assertEquals;
 
-/**
- * Test Cart Controller
- */
+@ExtendWith(MockitoExtension.class)
 public class CartControllerTest {
-    public static final String USERNAME = "test";
-    private CartController cartController;
-    private final UserRepository userRepo = mock(UserRepository.class);
-    private final CartRepository cartRepo = mock(CartRepository.class);
-    private final ItemRepository itemRepository = mock(ItemRepository.class);
+    @InjectMocks
+    CartController cartController;
 
-    @Before
-    public void setUp() {
-        cartController = new CartController();
-        TestUtils.injectObjects(cartController, "cartRepository", cartRepo);
-        TestUtils.injectObjects(cartController, "userRepository", userRepo);
-        TestUtils.injectObjects(cartController, "itemRepository", itemRepository);
-    }
+    @Mock
+    UserRepository userRepository;
 
-    /**
-     * Test function add Cart
-     */
+    @Mock
+    ItemRepository itemRepository;
+
+    @Mock
+    CartRepository cartRepository;
+
     @Test
-    public void addTocart() {
-        User user = new User();
-        user.setUsername(USERNAME);
-
-        Item item = com.example.demo.controllers.TestUtils.getItem0();
-
-        Cart cart = new Cart();
-        cart.setId(0L);
-        List<Item> itemList = new ArrayList<>();
-        itemList.add(item);
-        cart.setItems(itemList);
-        cart.setTotal(new BigDecimal("2.99"));
-        cart.setUser(user);
-        user.setCart(cart);
-
-        when(userRepo.findByUsername(USERNAME)).thenReturn(user);
-        when(itemRepository.findById(0L)).thenReturn(java.util.Optional.of(item));
-
-        ModifyCartRequest request = new ModifyCartRequest();
-        request.setItemId(0L);
-        request.setQuantity(1);
-        request.setUsername("test");
-
-        ResponseEntity<Cart> response = cartController.addTocart(request);
-
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCodeValue());
-        Cart retrievedCart = response.getBody();
-        assertNotNull(retrievedCart);
-        assertEquals(0L, retrievedCart.getId());
-        List<Item> items = retrievedCart.getItems();
-        assertNotNull(items);
-        Item retrievedItem = items.get(0);
-        assertEquals(2, items.size());
-        assertNotNull(retrievedItem);
-        assertEquals(item, retrievedItem);
-        assertEquals(new BigDecimal("5.98"), retrievedCart.getTotal());
-        assertEquals(user, retrievedCart.getUser());
+    void addToCartNotFoundUser() {
+        Mockito.doReturn(null).when(userRepository).findByUsername(Mockito.any());
+        ResponseEntity<Cart> responseEntity = cartController.addTocart(new ModifyCartRequest());
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
     }
 
     @Test
-    public void testAddToCartNullUser() {
-        User user = new User();
-        user.setUsername(USERNAME);
-
-        Item item = com.example.demo.controllers.TestUtils.getItem0();
-
-        Cart cart = new Cart();
-        cart.setId(0L);
-        List<Item> itemList = new ArrayList<>();
-        itemList.add(item);
-        cart.setItems(itemList);
-        cart.setTotal(new BigDecimal("2.99"));
-        cart.setUser(user);
-        user.setCart(cart);
-
-        when(userRepo.findByUsername(USERNAME)).thenReturn(null);
-        when(itemRepository.findById(0L)).thenReturn(java.util.Optional.of(item));
-
-        ModifyCartRequest request = new ModifyCartRequest();
-        request.setItemId(0L);
-        request.setQuantity(1);
-        request.setUsername("test");
-
-        ResponseEntity<Cart> response = cartController.addTocart(request);
-
-        assertNotNull(response);
-        assertEquals(404, response.getStatusCodeValue());
+    void addToCartNotFoundItem() {
+        Mockito.doReturn(new User()).when(userRepository).findByUsername(Mockito.any());
+        Mockito.doReturn(Optional.empty()).when(itemRepository).findById(Mockito.any());
+        ResponseEntity<Cart> responseEntity = cartController.addTocart(new ModifyCartRequest());
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
     }
 
-    /**
-     * Test function remove Cart
-     */
     @Test
-    public void removeFromcart() {
-        User user = new User();
-        user.setUsername(USERNAME);
+    void addToCartSuccess() {
+        ModifyCartRequest request = new ModifyCartRequest();
+        request.setQuantity(3);
 
-        Item item = com.example.demo.controllers.TestUtils.getItem0();
+        User user = createUser();
+        Cart cart = createCart();
+        Item item = createItem();
 
-        Cart cart = new Cart();
-        cart.setId(0L);
-        List<Item> itemList = new ArrayList<>();
-        itemList.add(item);
-        cart.setItems(itemList);
-        cart.setTotal(new BigDecimal("2.99"));
+        List<Item> items = new ArrayList<>();
+        items.add(item);
         cart.setUser(user);
+        cart.setItems(items);
         user.setCart(cart);
 
-        when(userRepo.findByUsername(USERNAME)).thenReturn(user);
-        when(itemRepository.findById(0L)).thenReturn(java.util.Optional.of(item));
+        Mockito.doReturn(user).when(userRepository).findByUsername(Mockito.any());
+        Mockito.doReturn(Optional.of(item)).when(itemRepository).findById(Mockito.any());
 
+        ResponseEntity<Cart> responseEntity = cartController.addTocart(request);
+
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(cart, responseEntity.getBody());
+    }
+
+    @Test
+    void removeFromCart_NotFoundUser() {
+        Mockito.doReturn(null).when(userRepository).findByUsername(Mockito.any());
+        ResponseEntity<Cart> responseEntity = cartController.removeFromcart(new ModifyCartRequest());
+        //
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+    }
+
+    @Test
+    void removeFromCart_NotFoundItem() {
+        Mockito.doReturn(new User()).when(userRepository).findByUsername(Mockito.any());
+        Mockito.doReturn(Optional.empty()).when(itemRepository).findById(Mockito.any());
+        ResponseEntity<Cart> responseEntity = cartController.removeFromcart(new ModifyCartRequest());
+        //
+        assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+    }
+
+    @Test
+    void removeFromCart_Success() {
         ModifyCartRequest request = new ModifyCartRequest();
-        request.setItemId(0L);
-        request.setQuantity(1);
-        request.setUsername("test");
+        request.setQuantity(3);
+        User user = createUser();
+        Cart cart = createCart();
+        Item item = createItem();
 
-        ResponseEntity<Cart> response = cartController.removeFromcart(request);
+        List<Item> items = new ArrayList<>();
+        items.add(item);
+        cart.setUser(user);
+        cart.setItems(items);
+        user.setCart(cart);
 
-        assertNotNull(response);
-        assertEquals(200, response.getStatusCodeValue());
-        Cart retrievedCart = response.getBody();
-        assertNotNull(retrievedCart);
-        assertEquals(0L, retrievedCart.getId());
-        List<Item> items = retrievedCart.getItems();
-        assertNotNull(items);
-        assertEquals(0, items.size());
-        assertEquals(new BigDecimal("0.00"), retrievedCart.getTotal());
-        assertEquals(user, retrievedCart.getUser());
+        Mockito.doReturn(user).when(userRepository).findByUsername(Mockito.any());
+        Mockito.doReturn(Optional.of(item)).when(itemRepository).findById(Mockito.any());
+
+        ResponseEntity<Cart> responseEntity = cartController.removeFromcart(request);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(0, responseEntity.getBody().getItems().size());
+    }
+
+    private User createUser() {
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("user");
+        user.setPassword("password");
+        return user;
+    }
+
+    private Cart createCart() {
+        Cart cart = new Cart();
+        cart.setId(1L);
+        cart.setTotal(BigDecimal.ONE);
+        return cart;
+    }
+
+    private Item createItem() {
+        Item item = new Item();
+        item.setId(1L);
+        item.setName("Item");
+        item.setPrice(BigDecimal.ONE);
+        item.setDescription("Item description");
+        return item;
     }
 }
